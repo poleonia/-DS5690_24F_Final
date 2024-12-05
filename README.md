@@ -33,6 +33,14 @@ Split patches extracted from 222 Whole Slide images,
 - Dice: 95.3
 - HD: 66.4
 - MSD: 10.1
+
+<div style="display: flex; justify-content: space-around; align-items: center;">
+
+<img src="docs/case01_image.png" alt="Image 1" width="30%" style="margin-right: 10px;"/>
+<img src="docs/case01_mask.png" alt="Image 2" width="30%" style="margin-right: 10px;"/>
+<img src="docs/case01_preds.png" alt="Image 3" width="30%"/>
+
+</div>
 ---
 
 ## **Installation and Usage**
