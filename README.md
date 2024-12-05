@@ -3,6 +3,13 @@
 Glomeruli segmentation is a specialized field in medical imaging, particularly in nephrology and kidney pathology. It involves identifying and delineating glomeruli structures within histological images of kidney tissue. 
 This project is to implement of glomeruli segmentation using the **Swin UNETR** model. Swin UNETR combines the strengths of the Swin Transformer architecture and the UNETR model to provide efficient and accurate segmentation in medical imaging tasks.
 
+<div style="display: flex; justify-content: space-around; align-items: center;">
+
+<img src="docs/SwinUnetr.png" alt="Image 1" width="60%" style="margin-right: 10px;"/>
+
+</div>
+
+
 Key Highlights:
 - Transformer-based model for effective feature extraction.
 - Handles high-resolution medical imaging tasks.
