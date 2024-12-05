@@ -5,7 +5,7 @@ This project is to implement of glomeruli segmentation using the **Swin UNETR** 
 
 <div style="display: flex; justify-content: space-around; align-items: center;">
 
-<img src="docs/SwinUnetr.png" alt="Image 1" width="60%" style="margin-right: 10px;"/>
+<img src="docs/SwinUnetr.png" alt="Image 1" width="80%" style="margin-right: 10px;"/>
 
 </div>
 
