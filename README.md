@@ -36,12 +36,11 @@ Split patches extracted from 222 Whole Slide images,
 
 <div style="display: flex; justify-content: space-around; align-items: center;">
 
-<img src="docs/case01_image.png" alt="Image 1" width="30%" style="margin-right: 10px;"/>
-<img src="docs/case01_mask.png" alt="Image 2" width="30%" style="margin-right: 10px;"/>
-<img src="docs/case01_preds.png" alt="Image 3" width="30%"/>
+<img src="docs/case01_image.png" alt="Image 1" width="50%" style="margin-right: 10px;"/>
+<img src="docs/case01_preds.png" alt="Image 2" width="50%"/>
 
 </div>
----
+
 
 ## **Installation and Usage**
 ### Prerequisites
