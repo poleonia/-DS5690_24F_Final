@@ -71,7 +71,7 @@ Split patches extracted from 222 Whole Slide images,
 ### Running the Application
 
 ```bash
-python testing.py --dataset_dir [Your Patch Folder] --reload_path .[Your PTH Folder] --result_folder [Your Output Folder]
+python Segmentation.py --dataset_dir [Your Patch Folder] --reload_path .[Your PTH Folder] --result_folder [Your Output Folder]
 ```
 
 ## **Critical Analysis**
