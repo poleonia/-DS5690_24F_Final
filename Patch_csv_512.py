@@ -372,7 +372,61 @@ class MOTSValDataSet_512_center(data.Dataset):
 
         return image.copy(), label.copy(), weight.copy(), name, task_id, scale_id
 
+class MOTSValDataSet_center(data.Dataset):
+    def __init__(self, root, list_path, max_iters=None, crop_size=(256, 256), mean=(128, 128, 128), scale=False,
+                 mirror=False, ignore_label=255, edge_weight=1):
+        self.root = root
+        self.list_path = list_path
+        self.crop_h, self.crop_w = crop_size
+        self.scale = scale
+        self.ignore_label = ignore_label
+        self.mean = mean
+        self.is_mirror = mirror
+        self.edge_weight = edge_weight
 
+        self.df = pd.read_csv(self.root)
+        self.df.sample(frac=1)
+
+        self.pad1024 = iaa.PadToFixedSize(width=1024, height=1024, position='center')
+
+        print('{} images are loaded!'.format(len(self.df)))
+
+    def __len__(self):
+        return len(self.df)
+
+    def __getitem__(self, index):
+        datafiles = self.df.iloc[index]
+        # read png file
+        image = plt.imread(datafiles["image_path"])
+
+        name = datafiles["name"]
+
+        task_id = datafiles["task_id"]
+
+        # data augmentation
+        image = image[:, :, :3]
+
+        if image.shape[0] == 2048:
+            image = resize(image, [1024, 1024, 3])
+            image = image[256:768, 256:768, :]
+            if((image.shape!=(512, 512,3))):
+                print(image.shape)
+        if image.shape[0] == 4096:
+            image = resize(image, [1024, 1024, 3])
+            image = image[256:768, 256:768, :]
+            if((image.shape!=(512, 512,3))):
+                print(image.shape)
+        image = np.expand_dims(image, axis=0)
+
+
+        # image = image.transpose((3, 1, 2, 0))  # Channel x H x W
+        # label = label[:,:,:,0].transpose((1, 2, 0))
+
+        image = image[0].transpose((2, 0, 1))  # Channel x H x W
+
+        image = image.astype(np.float32)
+
+        return image.copy(), name, task_id
 def my_collate(batch):
     image, label, weight, name, task_id, scale_id= zip(*batch)
     image = np.stack(image, 0)
@@ -388,8 +442,8 @@ def my_collate(batch):
 
 if __name__ == '__main__':
 
-    trainset_dir = './data/HC_data_patch/test/data_list.csv'
-    train_list = '/data/HC_data_patch/test/data_list.csv'
+    trainset_dir = 'example/patches/data_list.csv'
+    train_list = 'example/patches/data_list.csv'
 
 
 
@@ -405,11 +459,12 @@ if __name__ == '__main__':
     img_scale = 0.5
 
     trainloader = DataLoader(
-        MOTSValDataSet(trainset_dir, train_list, max_iters=itrs_each_epoch * batch_size,
+        MOTSValDataSet_center(trainset_dir, train_list, max_iters=itrs_each_epoch * batch_size,
                     crop_size=input_size, scale=random_scale, mirror=random_mirror),batch_size = 1, shuffle = False, num_workers =0)
 
+
     for iter, batch in enumerate(trainloader):
-        print(iter)
+        print(iter,batch)
         # imgs = torch.from_numpy(batch['image']).cuda()
         # lbls = torch.from_numpy(batch['label']).cuda()
         # volumeName = batch['name']

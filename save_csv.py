@@ -1,3 +1,4 @@
+import argparse
 import os
 import os.path as osp
 import numpy as np
@@ -92,78 +93,112 @@ class MOTSDataSet(data.Dataset):
         scale_list = []
         image_path_list = []
         label_path_list = []
-        tasks = glob.glob(os.path.join(self.root,'*'))
+        images = glob.glob(os.path.join(self.root,'*'))
+        # print("len(images)", len(images))
+        for ri in range(len(images)):
+            # print("ri",ri)
 
-        for ki in range(len(tasks)):
-            # if os.path.basename(tasks[ki]) != '2_0_capsule': #and os.path.basename(tasks[ki]) != '9_0_tufts':
-            #     continue
-            tasks_id = os.path.basename(tasks[ki]).split('_')[0]
-            scale_id = os.path.basename(tasks[ki]).split('_')[1]
-            stain_folders = glob.glob(os.path.join(tasks[ki],'*'))
+            if 'mask' in images[ri]:
+                continue
+            elif 'png' in images[ri]:
+                ###############################################################
+                ################ NEED CHANGE!!!!!!!!!#########################
+                ###############################################################
+                # if int(tasks_id) > 5:
+                # if int(tasks_id) > 14:
+                #     a = np.random.randint(0, 2, 1)
+                #     if a == 1:
+                #         continue
+                image_root = images[ri]
+                _, ext = os.path.splitext(images[ri])
 
-            for si in range(len(stain_folders)):
+                # print(stain_folders[si])
+                # print(image_root)
+                # print(os.path.basename(image_root).replace('_img.png', '_mask.png'))
+                # print(os.path.join(stain_folders[si],os.path.basename(image_root).replace('_img.png', '_mask.png')))
+                # print(glob.glob(os.path.join(stain_folders[si],os.path.basename(image_root).replace('_img.png', '_mask.png'))))
+                # mask_root = glob.glob(os.path.join(stain_folders[si],os.path.basename(image_root).replace('_img.png', '_mask.png')))[0]
 
-                images = glob.glob(os.path.join(stain_folders[si],'*'))
-                #print("len(images)", len(images))
-                for ri in range(len(images)):
-                    #print("ri",ri)
+                # print("mask_root:", mask_root)
+                # mask_root = 'aaa'
 
-                    if 'mask' in images[ri]:
-                        continue
-                    else:
-                        ###############################################################
-                        ################ NEED CHANGE!!!!!!!!!#########################
-                        ###############################################################
-                        #if int(tasks_id) > 5:
-                        if int(tasks_id) > 14:
-                            a = np.random.randint(0, 2, 1)
-                            if a == 1:
-                                continue
-                        image_root = images[ri]
-                        _, ext = os.path.splitext(images[ri])
+                # print(os.path.join(stain_folders[si],os.path.basename(image_root).replace(ext,'_mask*')))
+                tasks_id = 0
+                #scale_id = 0
+                task_list.append(int(tasks_id))
+                #scale_list.append(int(scale_id))
+                image_path_list.append(image_root)
+                # label_path_list.append(mask_root)
+        stain_folders = glob.glob(os.path.join(self.root,'*'))
 
-                        # print(stain_folders[si])
-                        # print(image_root)
-                        # print(os.path.basename(image_root).replace('_img.png', '_mask.png'))
-                        # print(os.path.join(stain_folders[si],os.path.basename(image_root).replace('_img.png', '_mask.png')))
-                        # print(glob.glob(os.path.join(stain_folders[si],os.path.basename(image_root).replace('_img.png', '_mask.png'))))
-                        mask_root = glob.glob(os.path.join(stain_folders[si],os.path.basename(image_root).replace('_img.png', '_mask.png')))[0]
+        # for si in range(len(stain_folders)):
+        #
+        #     images = glob.glob(os.path.join(stain_folders[si], '*'))
+        #     # print("len(images)", len(images))
+        #     for ri in range(len(images)):
+        #         # print("ri",ri)
+        #
+        #         if 'mask' in images[ri]:
+        #             continue
+        #         elif 'png' in images[ri]:
+        #             ###############################################################
+        #             ################ NEED CHANGE!!!!!!!!!#########################
+        #             ###############################################################
+        #             # if int(tasks_id) > 5:
+        #             # if int(tasks_id) > 14:
+        #             #     a = np.random.randint(0, 2, 1)
+        #             #     if a == 1:
+        #             #         continue
+        #             image_root = images[ri]
+        #             _, ext = os.path.splitext(images[ri])
+        #
+        #             # print(stain_folders[si])
+        #             # print(image_root)
+        #             # print(os.path.basename(image_root).replace('_img.png', '_mask.png'))
+        #             # print(os.path.join(stain_folders[si],os.path.basename(image_root).replace('_img.png', '_mask.png')))
+        #             # print(glob.glob(os.path.join(stain_folders[si],os.path.basename(image_root).replace('_img.png', '_mask.png'))))
+        #             # mask_root = glob.glob(os.path.join(stain_folders[si],os.path.basename(image_root).replace('_img.png', '_mask.png')))[0]
+        #
+        #             # print("mask_root:", mask_root)
+        #             # mask_root = 'aaa'
+        #
+        #             # print(os.path.join(stain_folders[si],os.path.basename(image_root).replace(ext,'_mask*')))
+        #             tasks_id = 0
+        #             scale_id = 0
+        #             task_list.append(int(tasks_id))
+        #             scale_list.append(int(scale_id))
+        #             image_path_list.append(image_root)
+        #             # label_path_list.append(mask_root)
 
-                        # print("mask_root:", mask_root)
-                        # mask_root = 'aaa'
-
-                    # print(os.path.join(stain_folders[si],os.path.basename(image_root).replace(ext,'_mask*')))
-                        task_list.append(int(tasks_id))
-                        scale_list.append(int(scale_id))
-                        image_path_list.append(image_root)
-                        label_path_list.append(mask_root)
 
         #self.img_ids = [i_id.strip().split() for i_id in open(self.root + self.list_path)]
 
 #        if not max_iters == None:
 #            self.img_ids = self.img_ids * int(np.ceil(float(max_iters) / len(self.img_ids)))
         self.files = []
-        self.df = pd.DataFrame(columns = ['image_path', 'label_path', 'name', 'task_id', 'scale_id'])
-
+        #self.df = pd.DataFrame(columns = ['image_path', 'label_path', 'name', 'task_id', 'scale_id'])
+        #self.df = pd.DataFrame(columns=['image_path', 'name', 'task_id', 'scale_id'])
+        self.df = pd.DataFrame(columns=['image_path', 'name', 'task_id'])
         print("Start preprocessing....")
         print("len(image_path_list)", len(image_path_list))
         for i in range(len(image_path_list)):
             print(i)
             #print(image_path_list[i] + ', ' + str(task_list[i]) + ', ' + str(scale_list[i]))
             image_path = image_path_list[i]
-            label_path = label_path_list[i]
+            #label_path = label_path_list[i]
             task_id = task_list[i]
-            scale_id = scale_list[i]
+            #scale_id = scale_list[i]
             name = image_path.replace('/', '-')
             # name = osp.basename(image_path)
             img_file = image_path
-            label_file = label_path
+            #label_file = label_path
             #label = plt.imread(label_file)
-            label = np.ones((512,512))
+            #label = np.ones((512, 512))
 
-            boud_h, boud_w = np.where(label >= 1)
-            self.df.loc[i] = [image_path, label_path, name, task_id, scale_id]
-
+            #boud_h, boud_w = np.where(label >= 1)
+            # self.df.loc[i] = [image_path, label_path, name, task_id, scale_id]
+            #self.df.loc[i] = [image_path, name, task_id, scale_id]
+            self.df.loc[i] = [image_path, name, task_id]
             # self.files.append({
             #     "image": img_file,
             #     "label": label_file,
@@ -578,12 +613,24 @@ def my_collate(batch):
     data_dict = {'image': image, 'label': label, 'weight': weight, 'name': name, 'task_id': task_id, 'scale_id': scale_id}
     return data_dict
 
+def get_arguments():
+
+    parser = argparse.ArgumentParser(description="SwinUnetr")
+
+    parser.add_argument("--dataset_dir", type=str, default='example/patches')
+    parser.add_argument("--data_list", type=str, default='example/patches')
+
+    return parser
 if __name__ == '__main__':
 
+    parser = get_arguments()
+    print(parser)
+    args = parser.parse_args()
+    trainset_dir = args.dataset_dir
+    train_list = args.data_list
 
-
-    trainset_dir = '/data2/KPMP_test/test'
-    train_list = '/data2/KPMP_test/test'
+    # trainset_dir = '/data2/KPMP_test/test'
+    # train_list = '/data2/KPMP_test/test'
 
 
     itrs_each_epoch = 250

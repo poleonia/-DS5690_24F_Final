@@ -26,7 +26,7 @@ import skimage
 
 import os.path as osp
 
-from Patch_csv_512 import MOTSValDataSet_512_center as MOTSValDataSet_joint
+from Patch_csv_512 import MOTSValDataSet_center as MOTSValDataSet_joint
 
 
 import random
@@ -74,7 +74,7 @@ def get_arguments():
     parser = argparse.ArgumentParser(description="DeepLabV3")
 
     parser.add_argument("--valset_dir", type=str,
-                        default='/data2/KPMP_test/test/data_list.csv')
+                        default='example/patches/data_list.csv')
     # parser.add_argument("--valset_dir", type=str, default='/Data2/KI_data_validationset_patch/')
     parser.add_argument("--snapshot_dir", type=str, default='snapshots_2D/fold1_with_white_scale_allpsuedo_allMatching_with_half_semi_0.05_0.05_normalwhole_0907/')
     #parser.add_argument("--reload_path", type=str, default='snapshots_2D/fold1_with_white_scale_allpsuedo_allMatching_with_half_semi_0.05_0.05_normalwhole_0907/MOTS_DynConv_fold1_with_white_scale_allpsuedo_allMatching_with_half_semi_0.05_0.05_normalwhole_0907_e74.pth')
@@ -309,10 +309,7 @@ def main():
                            crop_size=input_size, scale=args.random_scale, mirror=args.random_mirror,
                            edge_weight=edge_weight),batch_size=1,shuffle=False,num_workers=num_worker)
 
-        all_tr_loss = []
-        all_va_loss = []
-        train_loss_MA = None
-        val_loss_MA = None
+
 
         val_best_loss = 999999
         batch_size = args.batch_size
@@ -322,16 +319,8 @@ def main():
 
         model.eval()
         task0_pool_image = ImagePool(8)
-        task0_pool_mask = ImagePool(8)
-        task0_scale = []
         task0_name = []
 
-        val_loss = np.zeros((1))
-        val_F1 = np.zeros((1))
-        val_Dice = np.zeros((1))
-        val_HD = np.zeros((1))
-        val_MSD = np.zeros((1))
-        cnt = np.zeros((1))
 
         ####################################################################
         single_df_0 = pd.DataFrame(columns=['name', 'F1', 'Dice', 'HD', 'MSD'])
@@ -344,18 +333,14 @@ def main():
 
                 'dataloader'
                 imgs = batch[0].cuda()
-                lbls = batch[1].cuda()
-                wt = batch[2].cuda().float()
-                volumeName = batch[3]
-                t_ids = batch[4].cuda()
-                s_ids = batch[5]
+                volumeName = batch[1]
+                t_ids = batch[2].cuda()
+
 
                 for ki in range(len(imgs)):
                     now_task = t_ids[ki]
                     if now_task == 0:
                         task0_pool_image.add(imgs[ki].unsqueeze(0))
-                        task0_pool_mask.add(lbls[ki].unsqueeze(0))
-                        task0_scale.append((s_ids[ki]))
                         task0_name.append((volumeName[ki]))
 
 
@@ -373,13 +358,10 @@ def main():
 
                 if task0_pool_image.num_imgs >= batch_size:
                     images = task0_pool_image.query(batch_size)
-                    labels = task0_pool_mask.query(batch_size)
                     now_task = torch.tensor(0)
-                    scales = torch.ones(batch_size).cuda()
                     filename = []
-                    for bi in range(len(scales)):
-                        scales[int(len(scales) - 1 - bi)] = task0_scale.pop(0)
-                        filename.append(task0_name.pop(0))
+
+                    filename.append(task0_name.pop(0))
 
                     #preds, _ = model(images, torch.ones(batch_size).cuda() * 0, scales)
                     ##################################################################################
@@ -388,14 +370,7 @@ def main():
                     ##################################################################################
                     #print(preds.shape)
                     now_preds = preds[:,1,...] < preds[:,0,...]
-                    #now_preds = torch.argmax(preds, 0) == now_task
 
-                    #print(now_preds.shape)
-                    now_preds_onehot = one_hot_2D(now_preds.long())
-
-                    labels_onehot = one_hot_2D(labels.long())
-
-                    rmin, rmax, cmin, cmax = mask_to_box(images)
 
                     for pi in range(len(images)):
                         #prediction = preds[pi, 1, ...] > preds[pi, 0, ...]
@@ -404,21 +379,9 @@ def main():
                         img = (out_image - out_image.min())/ (out_image.max() - out_image.min())
                         plt.imsave(os.path.join(output_folder, filename[pi] + '_image.png'),
                                    img)
-                        plt.imsave(os.path.join(output_folder, filename[pi] + '_mask.png'),
-                                   labels[pi, ...].detach().cpu().numpy(), cmap = cm.gray)
                         plt.imsave(os.path.join(output_folder, filename[pi] + '_preds_%s.png' %(now_task.item())),
                                    prediction.detach().cpu().numpy(), cmap = cm.gray)
 
-                        F1, DICE, HD, MSD = count_score(now_preds_onehot[pi].unsqueeze(0), labels_onehot[pi].unsqueeze(0),
-                                                         rmin, rmax, cmin, cmax)
-                        row = len(single_df_0)
-                        single_df_0.loc[row] = [filename[pi], F1, DICE.cpu().numpy(), HD, MSD]
-
-                        val_F1[0] += F1
-                        val_Dice[0] += DICE
-                        val_HD[0] += HD
-                        val_MSD[0] += MSD
-                        cnt[0] += 1
 
 
 
@@ -429,13 +392,10 @@ def main():
             if (task0_pool_image.num_imgs < batch_size) & (task0_pool_image.num_imgs >0):
                 left_size = task0_pool_image.num_imgs
                 images = task0_pool_image.query(left_size)
-                labels = task0_pool_mask.query(left_size)
                 now_task = torch.tensor(0)
                 scales = torch.ones(left_size).cuda()
                 filename = []
-                for bi in range(len(scales)):
-                    scales[int(len(scales) - 1 - bi)] = task0_scale.pop(0)
-                    filename.append(task0_name.pop(0))
+                filename.append(task0_name.pop(0))
 
                 #preds, _ = model(images, torch.ones(left_size).cuda() * 0, scales)
                 ##################################################################################
@@ -444,12 +404,8 @@ def main():
                 ##################################################################################
 
                 now_preds = preds[:, 1, ...] < preds[:, 0, ...]
-                # now_preds = torch.argmax(preds, 0) == now_task
-                now_preds_onehot = one_hot_2D(now_preds.long())
 
-                labels_onehot = one_hot_2D(labels.long())
 
-                rmin, rmax, cmin, cmax = mask_to_box(images)
 
                 for pi in range(len(images)):
                     # prediction = preds[pi, 1, ...] > preds[pi, 0, ...]
@@ -458,39 +414,12 @@ def main():
                     img = (out_image - out_image.min()) / (out_image.max() - out_image.min())
                     plt.imsave(os.path.join(output_folder, filename[pi] + '_image.png'),
                                img)
-                    plt.imsave(os.path.join(output_folder, filename[pi] + '_mask.png'),
-                               labels[pi, ...].detach().cpu().numpy(), cmap=cm.gray)
                     plt.imsave(os.path.join(output_folder, filename[pi] + '_preds_%s.png' % (now_task.item())),
                                prediction.detach().cpu().numpy(), cmap=cm.gray)
 
-                    F1, DICE, HD, MSD = count_score(now_preds_onehot[pi].unsqueeze(0), labels_onehot[pi].unsqueeze(0),
-                                                    rmin, rmax, cmin, cmax)
-                    row = len(single_df_0)
-                    single_df_0.loc[row] = [filename[pi], F1, DICE.cpu().numpy(), HD, MSD]
-
-                    val_F1[0] += F1
-                    val_Dice[0] += DICE
-                    val_HD[0] += HD
-                    val_MSD[0] += MSD
-                    cnt[0] += 1
 
 
-        avg_val_F1 = val_F1 / cnt
-        avg_val_Dice = val_Dice / cnt
-        avg_val_HD = val_HD / cnt
-        avg_val_MSD = val_MSD / cnt
 
-        print('Validate \n 0dt_f1={:.4} 0dt_dsc={:.4} 0dt_hd={:.4} 0dt_msd={:.4}\n'
-              #######################################################################
-              .format(avg_val_F1[0].item(), avg_val_Dice[0].item(), avg_val_HD[0].item(), avg_val_MSD[0].item()
-                      ))
-
-        df = pd.DataFrame(columns = ['task','F1','Dice','HD','MSD'])
-        df.loc[0] = ['0Ahn', avg_val_F1[0].item(), avg_val_Dice[0].item(), avg_val_HD[0].item(), avg_val_MSD[0].item()]
-        ##########################################################################
-        df.to_csv(os.path.join(args.result_folder,'testing_result.csv'))
-
-        single_df_0.to_csv(os.path.join(args.result_folder,'testing_result_0.csv'))
 
     end = timeit.default_timer()
     print(end - start, 'seconds')
